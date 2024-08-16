@@ -17,9 +17,7 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
-    "php": ">=8.2",
-    "psr/log": "@stable",
-    "northrook/functions": "dev-main"
+    "php": ">=8.2"
   },
   "require-dev": {
     "northrook/dev-env": "dev-main"

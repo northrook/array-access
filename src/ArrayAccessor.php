@@ -54,21 +54,8 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
         }
 
         // Initialize the array values
-        $this->setArrayValue( $array, $parse );
+        $this->arrayValue( $array, $parse );
     }
-
-    final public function setArrayValue(
-        array | ArrayAccessor | string $array,
-        bool                           $parse = false,
-    ) : static {
-        $array = $this->arrayItems( $array );
-        if ( $parse ) {
-            return $this->set( $array );
-        }
-        $this->array = $array;
-        return $this;
-    }
-
 
     // ::: Assign ::::::::::::
 
@@ -374,6 +361,18 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
 
     // ::: Array ::::::::::::
 
+    final protected function arrayValue(
+        array | ArrayAccessor | string $array,
+        bool                           $parse = false,
+    ) : static {
+        $array = $this->arrayItems( $array );
+        if ( $parse ) {
+            return $this->set( $array );
+        }
+        $this->array = $array;
+        return $this;
+    }
+    
     /**
      * Return the given items as an array
      *
