@@ -1,0 +1,27 @@
+{
+  "name": "northrook/array-access",
+  "description": "Delineated notation access to PHP arrays, with an optional Primary Value, allowing sub-array keys to return either their assigned value, or nested values. ",
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Northrook\\": "src"
+    }
+  },
+  "authors": [
+    {
+      "name": "Martin",
+      "email": "mn@northrook.com"
+    }
+  ],
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "require": {
+    "php": ">=8.2",
+    "psr/log": "@stable",
+    "northrook/functions": "dev-main"
+  },
+  "require-dev": {
+    "northrook/dev-env": "dev-main"
+  }
+}
