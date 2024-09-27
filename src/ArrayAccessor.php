@@ -11,6 +11,7 @@ namespace Northrook;
 
 ----*/
 
+
 /**
  * Dot Properties
  *
@@ -24,38 +25,18 @@ namespace Northrook;
  */
 class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
 {
-    protected const
-        GET_ALL = 0,       // Returns the full array, including the primary value
-        PRIMARY_VALUE = 1, // Returns the primary value
-        GET_ARRAY = 2;     // Returns the array, without the primary value
+    protected const int
+            GET_ALL = 0,       // Returns the full array, including the primary value
+            PRIMARY_VALUE = 1, // Returns the primary value
+            GET_ARRAY = 2;     // Returns the array, without the primary value
 
-    public const PRIMARY_VALUE_KEY = '[=]';
+    /** @var non-empty-string */
+    protected const string DELIMITER = ".";
+    /** @var non-empty-string */
+    public const string    PRIMARY_VALUE_KEY = '[=]';
 
     /** @var array<TKey, TValue> The stored items */
     protected array $array = [];
-
-    /**
-     * Create a new DelineatedArray
-     *
-     * @param mixed|array       $array
-     * @param bool              $parse
-     * @param non-empty-string  $delimiter  [.] The character to use as a delimiter.
-     *
-     * @return void
-     */
-    public function __construct(
-        mixed                     $array = [],
-        bool                      $parse = false,
-        protected readonly string $delimiter = ".",
-    ) {
-        // Sanity check for delimiter value
-        if ( !$this->delimiter ) {
-            throw new \ValueError( static::class . ' $delimiter cannot be empty.' );
-        }
-
-        // Initialize the array values
-        $this->arrayValue( $array, $parse );
-    }
 
     // ::: Assign ::::::::::::
 
@@ -68,7 +49,8 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
      *
      * @return $this
      */
-    public function add( array | int | string $keys, mixed $value = null ) : static {
+    public function add( array | int | string $keys, mixed $value = null ) : static
+    {
         if ( \is_array( $keys ) ) {
             foreach ( $keys as $key => $value ) {
                 $this->add( $key, $value );
@@ -89,8 +71,8 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
      *
      * @return $this
      */
-    public function set( array | int | string $keys, mixed $value = null ) : static {
-
+    public function set( array | int | string $keys, mixed $value = null ) : static
+    {
         // Allows setting multiple values
         if ( \is_array( $keys ) ) {
             foreach ( $keys as $key => $value ) {
@@ -102,8 +84,7 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
 
         $items = &$this->array;
 
-        foreach ( \explode( $this->delimiter, (string) $keys ) as $key ) {
-
+        foreach ( \explode( $this::DELIMITER, (string) $keys ) as $key ) {
             // If there is noting, we create an empty array
             if ( !isset( $items[ $key ] ) ) {
                 $items[ $key ] = [];
@@ -116,7 +97,6 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
 
             $items = &$items[ $key ];
         }
-
 
         $items = $value;
 
@@ -131,7 +111,8 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
      *
      * @return $this
      */
-    public function push( mixed $key, mixed $value = null ) : static {
+    public function push( mixed $key, mixed $value = null ) : static
+    {
         if ( $value === null ) {
             $this->array[] = $key;
 
@@ -158,8 +139,8 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
      *
      * @return bool
      */
-    public function has( int | array | string $keys ) : bool {
-
+    public function has( int | array | string $keys ) : bool
+    {
         $keys = (array) $keys;
 
         if ( !$this->array || $keys === [] ) {
@@ -173,7 +154,7 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
                 continue;
             }
 
-            foreach ( \explode( $this->delimiter, $key ) as $segment ) {
+            foreach ( \explode( $this::DELIMITER, $key ) as $segment ) {
                 if ( !\is_array( $items ) || !\array_key_exists( $segment, $items ) ) {
                     return false;
                 }
@@ -193,8 +174,8 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
      *
      * @return mixed
      */
-    public function get( int | string $key, mixed $default = null ) : mixed {
-
+    public function get( int | string $key, mixed $default = null ) : mixed
+    {
         [ $key, $get ] = $this->propertyKey( $key );
 
         // Return early if the $key is in the top layer
@@ -203,13 +184,13 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
         }
 
         // If the $key doesn't have a deliminator at this point, it does not exist
-        if ( !\is_string( $key ) || !\str_contains( $key, $this->delimiter ) ) {
+        if ( !\is_string( $key ) || !\str_contains( $key, $this::DELIMITER ) ) {
             return $default;
         }
 
         $items = $this->array;
 
-        foreach ( \explode( $this->delimiter, $key ) as $segment ) {
+        foreach ( \explode( $this::DELIMITER, $key ) as $segment ) {
             if ( !\is_array( $items ) || !\array_key_exists( $segment, $items ) ) {
                 return $default;
             }
@@ -240,7 +221,8 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
      *
      * @return mixed
      */
-    public function pull( int | string | null $key = null, mixed $default = null ) : mixed {
+    public function pull( int | string | null $key = null, mixed $default = null ) : mixed
+    {
         if ( $key === null ) {
             $value = $this->all();
             $this->clear();
@@ -257,27 +239,20 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
     /**
      * Flatten an array with the given character as a key delimiter
      *
-     * @param string      $delimiter
-     * @param null|array  $array
-     * @param string      $previousKey
+     * @param string                $delimiter
+     * @param ?array<TKey, TValue>  $array
+     * @param string                $previousKey
      *
      * @return array<TKey, TValue>
      */
-    public function flatten(
-        string $delimiter = '.',
-        ?array $array = null,
-        string $previousKey = '',
-    ) : array {
-
+    public function flatten( string $delimiter = '.', ?array $array = null, string $previousKey = '' ) : array
+    {
         $flatten = [];
 
-        if ( $array === null ) {
-            $array = $this->array;
-        }
-
+        $array ??= $this->array;
 
         foreach ( $array as $key => $value ) {
-            if ( \is_array( $value ) && !\empty( $value ) ) {
+            if ( \is_array( $value ) && !empty( $value ) ) {
                 $flatten[] = $this->flatten( $delimiter, $value, $previousKey . $key . $delimiter );
             }
             else {
@@ -296,7 +271,8 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
      *
      * @return array<TKey, TValue>
      */
-    public function all() : array {
+    public function all() : array
+    {
         return $this->array;
     }
 
@@ -310,8 +286,8 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
      *
      * @return $this
      */
-    public function clear( int | array | string $keys = null ) : static {
-
+    public function clear( int | array | string $keys = null ) : static
+    {
         if ( $keys === null ) {
             $this->array = [];
 
@@ -328,20 +304,21 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
     /**
      * Delete the given key or keys
      *
-     * @param array<TKey>|array<TKey, TValue>|int|string  $keys
+     *
+     * @param int|string|TKey  ...$keys
      *
      * @return $this
      */
-    public function delete( int | array | string $keys ) : static {
-
-        foreach ( (array) $keys as $key ) {
+    public function delete( int | string ...$keys ) : static
+    {
+        foreach ( $keys as $key ) {
             if ( \array_key_exists( $key, $this->array ) ) {
                 unset( $this->array[ $key ] );
                 continue;
             }
 
             $items       = &$this->array;
-            $segments    = \explode( $this->delimiter, $key );
+            $segments    = \explode( $this::DELIMITER, $key );
             $lastSegment = \array_pop( $segments );
 
             foreach ( $segments as $segment ) {
@@ -358,13 +335,19 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
         return $this;
     }
 
-
     // ::: Array ::::::::::::
 
+    /**
+     * @param array<TKey, TValue>|ArrayAccessor<TKey, TValue>|string  $array
+     * @param bool                                                    $parse
+     *
+     * @return $this
+     */
     final protected function arrayValue(
-        array | ArrayAccessor | string $array,
-        bool                           $parse = false,
-    ) : static {
+            array | ArrayAccessor | string $array,
+            bool                           $parse = false,
+    ) : static
+    {
         $array = $this->arrayItems( $array );
         if ( $parse ) {
             return $this->set( $array );
@@ -372,15 +355,16 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
         $this->array = $array;
         return $this;
     }
-    
+
     /**
      * Return the given items as an array
      *
-     * @param array<TKey, TValue>|self|string  $items
+     * @param array<TKey, TValue>|\Northrook\ArrayAccessor|string  $items
      *
      * @return array<TKey, TValue>
      */
-    final protected function arrayItems( array | self | string $items ) : array {
+    final protected function arrayItems( array | self | string $items ) : array
+    {
         return match ( true ) {
             \is_array( $items )      => $items,
             $items instanceof static => $items->all(),
@@ -388,26 +372,26 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
         };
     }
 
-
     // ::: Internal Utility ::::::::::::
 
-    final protected function propertyKey( int | string $key ) : array {
-
+    final protected function propertyKey( int | string $key ) : array
+    {
         if ( $key === '' ) {
             throw new \ValueError( static::class . ' property $key cannot be empty.' );
         }
 
         return [
-            \trim( ( string ) $key, ".:" ),
-            match ( \substr( (string ) $key, -1 ) ) {
-                '.'     => $this::GET_ARRAY,          // Returns the array, without the property value
-                ':'     => $this::GET_ALL,            // Returns the full array, including the property value
-                default => $this::PRIMARY_VALUE,      // Returns the property value
-            },
+                \trim( ( string ) $key, ".:" ),
+                match ( \substr( (string ) $key, -1 ) ) {
+                    '.'     => $this::GET_ARRAY,          // Returns the array, without the property value
+                    ':'     => $this::GET_ALL,            // Returns the full array, including the property value
+                    default => $this::PRIMARY_VALUE,      // Returns the property value
+                },
         ];
     }
 
-    final protected function unsetPropertyValues( array &$items ) : void {
+    final protected function unsetPropertyValues( array &$items ) : void
+    {
         foreach ( $items as $key => $value ) {
             if ( $key === $this::PRIMARY_VALUE_KEY ) {
                 unset( $items[ $key ] );
@@ -427,22 +411,25 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
      *
      * @return \ArrayIterator<TKey, TValue>
      */
-    final public function getIterator() : \Traversable {
+    final public function getIterator() : \Traversable
+    {
         return new \ArrayIterator( $this->array );
     }
 
-
     // ::: ArrayAccess :::::::::::::::::
 
-    final public function offsetExists( mixed $offset ) : bool {
+    final public function offsetExists( mixed $offset ) : bool
+    {
         return $this->has( $offset );
     }
 
-    final public function offsetGet( mixed $offset ) : mixed {
+    final public function offsetGet( mixed $offset ) : mixed
+    {
         return $this->get( $offset );
     }
 
-    final public function offsetSet( mixed $offset, mixed $value ) : void {
+    final public function offsetSet( mixed $offset, mixed $value ) : void
+    {
         if ( !$offset ) {
             $this->array[] = $value;
         }
@@ -451,7 +438,8 @@ class ArrayAccessor implements \IteratorAggregate, \ArrayAccess
         }
     }
 
-    final public function offsetUnset( mixed $offset ) : void {
+    final public function offsetUnset( mixed $offset ) : void
+    {
         $this->delete( $offset );
     }
 

@@ -17,9 +17,13 @@
   "minimum-stability": "dev",
   "prefer-stable": true,
   "require": {
-    "php": ">=8.2"
+    "php": ">=8.3"
   },
   "require-dev": {
-    "northrook/dev-env": "dev-main"
+    "northrook/dev-env": "dev-main",
+    "phpstan/phpstan": "@stable"
+  },
+  "scripts": {
+    "phpstan": "vendor/bin/phpstan analyse"
   }
 }
