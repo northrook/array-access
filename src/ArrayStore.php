@@ -74,6 +74,23 @@ class ArrayStore extends ArrayAccessor
     }
 
     /**
+     * @param array<TKey, TValue>|ArrayAccessor<TKey, TValue>|string $array
+     * @param bool                                                   $override
+     *
+     * @return ArrayAccessor
+     */
+    final public function setDefault(
+        array|ArrayAccessor|string $array,
+        bool                       $override = false,
+    ) : ArrayAccessor {
+        if ( ! empty( $array ) && ! $override ) {
+            return $this;
+        }
+
+        return $this->arrayValue( $array, true );
+    }
+
+    /**
      * @return $this
      */
     final protected function loadDataStore() : self
