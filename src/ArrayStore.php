@@ -96,7 +96,10 @@ class ArrayStore extends ArrayAccessor
     final protected function loadDataStore() : self
     {
         if ( ! $this->storagePath->exists || ! empty( $this->array ) ) {
-            dump( "No entity at {$this->storagePath}" );
+            Log::info(
+                'No data to load, {reason}.',
+                ['reason' => ! empty( $this->array ) ? 'array already set' : 'storagePath not found'],
+            );
             return $this;
         }
 
