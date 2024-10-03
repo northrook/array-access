@@ -9,8 +9,10 @@
 /composer.phar
 
 # Build data
+/var
 .env
 *.lock
+*.cache
 /index.php
 
 # Node

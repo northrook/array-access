@@ -2,30 +2,28 @@
 
 namespace Northrook\ArrayAccessor;
 
-/**
- * @used-by \Northrook\ArrayAccessor
- */
-trait ArrayConstructor {
+use Northrook\ArrayAccessor;
 
+/**
+ * @template TKey of array-key
+ * @template TValue of mixed
+ *
+ * @extends ArrayAccessor<TKey,TValue>
+ */
+trait ArrayConstructor
+{
     /**
-     * Create a new DelineatedArray
+     * Create a new DelineatedArray.
      *
-     * @param mixed|array       $array
-     * @param bool              $parse
-     * @param non-empty-string  $delimiter  [.] The character to use as a delimiter.
+     * @param array|\Northrook\ArrayAccessor<TKey, TValue>|string $array
+     * @param bool                                                $parse
      *
      * @return void
      */
     public function __construct(
-            mixed                     $array = [],
-            bool                      $parse = false,
-            protected readonly string $delimiter = ".",
+        array|ArrayAccessor|string $array = [],
+        bool                       $parse = false,
     ) {
-        // Sanity check for delimiter value
-        if ( !$this->delimiter ) {
-            throw new \ValueError( static::class . ' $delimiter cannot be empty.' );
-        }
-
         // Initialize the array values
         $this->arrayValue( $array, $parse );
     }

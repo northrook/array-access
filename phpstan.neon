@@ -2,3 +2,16 @@ parameters:
 	level: 6
 	paths:
 		- src
+
+	ignoreErrors:
+		-
+			message: '#Access to an undefined static property .+::\$service#'
+			path: *.php
+
+		-
+			message: "#Readonly property .+ is assigned outside of the constructor.#"
+			path: *.php
+
+		-
+			message: "#Class .+ has an uninitialized readonly property .+ Assign it in the constructor.#"
+			path: *.php

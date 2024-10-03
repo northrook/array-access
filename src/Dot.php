@@ -2,10 +2,9 @@
 
 namespace Northrook;
 
-use Northrook\ArrayAccessor\ArrayConstructor;
-use Northrook\ArrayAccessor\PublicSetArrayValue;
+use Northrook\ArrayAccessor\{ArrayConstructor, PublicSetArrayValue};
 
-class Dot extends ArrayAgccessor
+class Dot extends ArrayAccessor
 {
     use ArrayConstructor, PublicSetArrayValue;
 }
