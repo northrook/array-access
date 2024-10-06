@@ -8,7 +8,6 @@ use InvalidArgumentException;
 use Northrook\Exception\Trigger;
 use Northrook\Logger\Log;
 use Northrook\Resource\Path;
-use Support\Normalize;
 use Symfony\Component\VarExporter\Exception\ExceptionInterface;
 use Symfony\Component\VarExporter\VarExporter;
 use function Assert\OPcacheEnabled;
@@ -33,14 +32,20 @@ class ArrayStore extends ArrayAccessor
 
     public readonly string $name;
 
+    /**
+     * @param string      $storagePath Location to store the array data file
+     * @param null|string $name        [optional] If no name is provided, one will be generated from an extending class, or $storagePath basename
+     * @param bool        $readonly    [false] Prevents updating this instance of the ArrayStore
+     * @param bool        $autosave    [true]  Should changes be saved to disk on __destruct?
+     */
     public function __construct(
-        string         $name,
-        string         $storageDirectory,
+        string         $storagePath,
+        ?string        $name = null,
         protected bool $readonly = false,
         protected bool $autosave = true,
     ) {
-        $this->name        = Normalize::key( $name );
-        $this->storagePath = new Path( $storageDirectory."/{$this->name}.array.php" );
+        $this->storagePath = new Path( $storagePath );
+        $this->name        = $this->generateStoreName( $name );
         $this->loadDataStore();
     }
 
@@ -77,7 +82,7 @@ class ArrayStore extends ArrayAccessor
      * @param array<TKey, TValue>|ArrayAccessor<TKey, TValue>|string $array
      * @param bool                                                   $override
      *
-     * @return ArrayAccessor
+     * @return ArrayAccessor<TKey, TValue>
      */
     final public function setDefault(
         array|ArrayAccessor|string $array,
@@ -217,5 +222,14 @@ class ArrayStore extends ArrayAccessor
             ],
         );
 
+    }
+
+    private function generateStoreName( ?string $name ) : string
+    {
+        $name ??= $this::class;
+        if ( $name === static::class ) {
+            return \strchr( $this->storagePath->basename, '.', true );
+        }
+        return $name;
     }
 }
