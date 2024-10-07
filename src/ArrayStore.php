@@ -127,7 +127,7 @@ class ArrayStore extends ArrayAccessor
         // Prevent changes to the $data until we're done saving
         $this->locked = true;
 
-        $hash = hashKey( $this->array );
+        $hash = hashKey( $this->array, 'serialize' );
 
         if ( ( $this->storedHash ?? null ) === $hash ) {
             Log::info( 'No need to save {name}.', ['name' => $this::class."::{$this->name}"] );
