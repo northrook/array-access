@@ -88,7 +88,7 @@ class ArrayStore extends ArrayAccessor
         array|ArrayAccessor|string $array,
         bool                       $override = false,
     ) : ArrayAccessor {
-        if ( ! empty( $array ) && ! $override ) {
+        if ( ! empty( $this->array ) && ! $override ) {
             return $this;
         }
 
@@ -111,7 +111,7 @@ class ArrayStore extends ArrayAccessor
         $dataStore = include $this->storagePath->path;
 
         if ( $dataStore['name'] !== $this->name ) {
-            throw new InvalidArgumentException( $this::class." name mismatch. The object name of {$this->name} does not match the stored name {$dataStore['name']}.}" );
+            throw new InvalidArgumentException( $this::class." name mismatch. The object name of {$this->name} does not match the stored name {$dataStore['name']}." );
         }
 
         $this->storedHash = $dataStore['hash'];
