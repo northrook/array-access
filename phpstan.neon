@@ -1,11 +1,19 @@
 parameters:
-	level: 6
+	level: 9
 	paths:
 		- src
-
+	reportUnmatchedIgnoredErrors: false
 	ignoreErrors:
 		-
-			message: '#Access to an undefined static property .+::\$service#'
+			message: '#Access to an undefined static property .+::\$.+#'
+			path: *.php
+
+		-
+			message: '#Access to an uninitialized readonly property .+::\$.+#'
+			path: *.php
+
+		-
+			message: '#Property .+::\$serviceContainer is never read, only written.#'
 			path: *.php
 
 		-
@@ -14,4 +22,8 @@ parameters:
 
 		-
 			message: "#Class .+ has an uninitialized readonly property .+ Assign it in the constructor.#"
+			path: *.php
+
+		-
+			message: "#Class .+ uses generic trait .+ but does not specify its types: .+#"
 			path: *.php

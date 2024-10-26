@@ -10,13 +10,6 @@ use IteratorAggregate;
 use Traversable;
 use ValueError;
 
-/*----
-    Dot Notation style array accessor
-
-    - Must be extendable
-
-----*/
-
 /**
  * Dot Properties.
  *
@@ -55,7 +48,7 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
      *
      * @return $this
      */
-    public function add( array|int|string $keys, mixed $value = null ) : static
+    public function add( array|int|string $keys, mixed $value = null ) : self
     {
         if ( \is_array( $keys ) ) {
             foreach ( $keys as $key => $value ) {
@@ -77,7 +70,7 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
      *
      * @return $this
      */
-    public function set( array|int|string $keys, mixed $value = null ) : static
+    public function set( array|int|string $keys, mixed $value = null ) : self
     {
         // Allows setting multiple values
         if ( \is_array( $keys ) ) {
@@ -117,7 +110,7 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
      *
      * @return $this
      */
-    public function push( mixed $key, mixed $value = null ) : static
+    public function push( mixed $key, mixed $value = null ) : self
     {
         if ( null === $value ) {
             $this->array[] = $key;
@@ -290,7 +283,7 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
      *
      * @return $this
      */
-    public function clear( int|array|string $keys = null ) : static
+    public function clear( int|array|string $keys = null ) : self
     {
         if ( null === $keys ) {
             $this->array = [];
@@ -312,7 +305,7 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
      *
      * @return $this
      */
-    public function delete( int|string ...$keys ) : static
+    public function delete( int|string ...$keys ) : self
     {
         foreach ( $keys as $key ) {
             if ( \array_key_exists( $key, $this->array ) ) {
@@ -342,15 +335,15 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
     // ::: Array ::::::::::::
 
     /**
-     * @param array<TKey, TValue>|ArrayAccessor<TKey, TValue>|string $array
-     * @param bool                                                   $parse
+     * @param array<TKey, TValue>|self<TKey, TValue>|string $array
+     * @param bool                                          $parse
      *
      * @return $this
      */
     final protected function arrayValue(
         array|ArrayAccessor|string $array,
         bool                       $parse = false,
-    ) : static {
+    ) : self {
         $array = $this->arrayItems( $array );
         if ( $parse ) {
             return $this->set( $array );
@@ -362,7 +355,7 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
     /**
      * Return the given items as an array.
      *
-     * @param array<TKey, TValue>|\Northrook\ArrayAccessor<TKey, TValue>|string $items
+     * @param array<TKey, TValue>|self<TKey, TValue>|string $items
      *
      * @return array<TKey, TValue>
      */
@@ -385,7 +378,7 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
     final protected function propertyKey( int|string $key ) : array
     {
         if ( '' === $key ) {
-            throw new ValueError( static::class.' property $key cannot be empty.' );
+            throw new ValueError( $this::class.' property $key cannot be empty.' );
         }
 
         return [

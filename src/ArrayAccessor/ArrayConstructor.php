@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Northrook\ArrayAccessor;
 
 use Northrook\ArrayAccessor;
@@ -15,8 +17,8 @@ trait ArrayConstructor
     /**
      * Create a new DelineatedArray.
      *
-     * @param array|\Northrook\ArrayAccessor<TKey, TValue>|string $array
-     * @param bool                                                $parse
+     * @param array<TKey, TValue>|ArrayAccessor<TKey, TValue>|string $array
+     * @param bool                                                   $parse
      *
      * @return void
      */

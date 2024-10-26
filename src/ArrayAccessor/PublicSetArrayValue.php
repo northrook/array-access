@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Northrook\ArrayAccessor;
 
 use Northrook\ArrayAccessor;
@@ -13,10 +15,10 @@ use Northrook\ArrayAccessor;
 trait PublicSetArrayValue
 {
     /**
-     * @param array|\Northrook\ArrayAccessor<TKey, TValue>|string $array
-     * @param bool                                                $parse
+     * @param array<TKey, TValue>|ArrayAccessor<TKey, TValue>|string $array
+     * @param bool                                                   $parse
      *
-     * @return ArrayAccessor
+     * @return ArrayAccessor<TKey, TValue>
      */
     public function setArrayValue(
         array|ArrayAccessor|string $array,

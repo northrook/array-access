@@ -8,10 +8,9 @@ use InvalidArgumentException;
 use Northrook\Exception\Trigger;
 use Northrook\Logger\Log;
 use Northrook\Resource\Path;
+use Support\Time;
 use Symfony\Component\VarExporter\Exception\ExceptionInterface;
 use Symfony\Component\VarExporter\VarExporter;
-use function Assert\OPcacheEnabled;
-use function String\hashKey;
 use Throwable;
 
 /**
@@ -127,7 +126,7 @@ class ArrayStore extends ArrayAccessor
         // Prevent changes to the $data until we're done saving
         $this->locked = true;
 
-        $hash = hashKey( $this->array, 'serialize' );
+        $hash = \hash( algo : 'xxh3', data : \serialize( $this->array ) );
 
         if ( ( $this->storedHash ?? null ) === $hash ) {
             Log::info( 'No need to save {name}.', ['name' => $this::class."::{$this->name}"] );
@@ -186,8 +185,6 @@ class ArrayStore extends ArrayAccessor
             
                Do not edit it manually.
             
-               See https://github.com/northrook/array-access for more information.
-            
             ---------------------------------------------------------------------*/
             
             return {$dataStore};
@@ -199,7 +196,7 @@ class ArrayStore extends ArrayAccessor
         $path = $this->storagePath->path;
 
         try {
-            if ( ! OPcacheEnabled() ) {
+            if ( ! \ini_get( 'opcache.enable' ) ) {
                 Trigger::error( 'Unable to use OPCache for {className} -> {file}. OPcache is disabled.', [
                     'className' => $this->name,
                     'file'      => $path,
@@ -224,11 +221,22 @@ class ArrayStore extends ArrayAccessor
 
     }
 
+    /**
+     * Returns a name for this {@see ArrayStore}.
+     *
+     * - Returns `$name` if set
+     * - else `className` if extended
+     * - `storagePath->basename` otherwise
+     *
+     * @param null|string $name
+     *
+     * @return string
+     */
     private function generateStoreName( ?string $name ) : string
     {
         $name ??= $this::class;
         if ( $name === static::class ) {
-            return \strchr( $this->storagePath->basename, '.', true );
+            return \strchr( (string) $this->storagePath->basename, '.', true ) ?: $name;
         }
         return $name;
     }
