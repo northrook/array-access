@@ -44,7 +44,7 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
      * if the key doesn't exist already.
      *
      * @param array<TKey, TValue>|int|string $keys
-     * @param mixed                          $value
+     * @param TValue                         $value
      *
      * @return $this
      */
@@ -66,7 +66,7 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
      * Set a given key / value pair or pairs.
      *
      * @param array<TKey, TValue>|int|string $keys
-     * @param null|mixed                     $value
+     * @param TValue                         $value
      *
      * @return $this
      */
@@ -105,23 +105,24 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
     /**
      * Push a given value to the end of the array in a given key.
      *
-     * @param mixed $key
-     * @param mixed $value
+     * @param int|string $key
+     * @param TValue     $value
      *
      * @return $this
      */
-    public function push( mixed $key, mixed $value = null ) : self
+    public function push( int|string $key, mixed $value = null ) : self
     {
-        if ( null === $value ) {
-            $this->array[] = $key;
-
-            return $this;
-        }
+        // if ( null === $value ) {
+        //     $this->array[] = $key;
+        //
+        //     return $this;
+        // }
 
         $items = $this->get( $key );
 
         if ( \is_array( $items ) || null === $items ) {
             $items[] = $value;
+            /** @var TValue $items */
             $this->set( $key, $items );
         }
 
@@ -170,7 +171,7 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
      * @param int|string $key
      * @param mixed      $default
      *
-     * @return mixed
+     * @return TValue
      */
     public function get( int|string $key, mixed $default = null ) : mixed
     {
@@ -301,7 +302,7 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
     /**
      * Delete the given key or keys.
      *
-     * @param int|string|TKey ...$keys
+     * @param TKey[] ...$keys
      *
      * @return $this
      */
@@ -315,7 +316,7 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
             }
 
             $items       = &$this->array;
-            $segments    = \explode( $this::DELIMITER, $key );
+            $segments    = \explode( $this::DELIMITER, (string) $key );
             $lastSegment = \array_pop( $segments );
 
             foreach ( $segments as $segment ) {
@@ -355,7 +356,7 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
     /**
      * Return the given items as an array.
      *
-     * @param array<TKey, TValue>|self<TKey, TValue>|string $items
+     * @param array<TKey, TValue>|self<TKey, TValue>|string<TValue> $items
      *
      * @return array<TKey, TValue>
      */
