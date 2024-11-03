@@ -16,7 +16,7 @@ use ValueError;
  * Inspired by adbario/php-dot-notation, and Laravel Collection.
  *
  * @template TKey of array-key
- * @template TValue of mixed
+ * @template TValue of mixed|array<TKey,TValue>
  *
  * @implements \ArrayAccess<TKey, TValue>       for use with $class['key'] = 'value'
  * @implements \IteratorAggregate<TKey, TValue> for use in iterators like array_map
@@ -70,7 +70,7 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
      *
      * @return $this
      */
-    public function set( array|int|string $keys, mixed $value = null ) : self
+    public function set( array|int|string $keys, mixed $value = [] ) : self
     {
         // Allows setting multiple values
         if ( \is_array( $keys ) ) {
@@ -171,7 +171,7 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
      * @param int|string $key
      * @param mixed      $default
      *
-     * @return TValue
+     * @return null|array<TKey, TValue>|TValue
      */
     public function get( int|string $key, mixed $default = null ) : mixed
     {
@@ -218,7 +218,7 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
      * @param null|int|string $key
      * @param mixed           $default
      *
-     * @return mixed
+     * @return null|array<TKey, TValue>|TValue
      */
     public function pull( int|string|null $key = null, mixed $default = null ) : mixed
     {
@@ -293,7 +293,7 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
         }
 
         foreach ( (array) $keys as $key ) {
-            $this->set( $key, [] );
+            $this->set( $key );
         }
 
         return $this;
@@ -356,11 +356,11 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
     /**
      * Return the given items as an array.
      *
-     * @param array<TKey, TValue>|self<TKey, TValue>|string<TValue> $items
+     * @param array<TKey, TValue>|self<TKey, TValue>|string $items
      *
-     * @return array<TKey, TValue>
+     * @return array<TKey,mixed|TValue>
      */
-    final protected function arrayItems( array|self|string $items ) : array
+    final protected function arrayItems( array|ArrayAccessor|string $items ) : array
     {
         return match ( true ) {
             \is_array( $items )      => $items,
@@ -429,6 +429,10 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
         return $this->has( $offset );
     }
 
+    /**
+     * @param  TKey                            $offset
+     * @return null|array<TKey, TValue>|TValue
+     */
     final public function offsetGet( mixed $offset ) : mixed
     {
         return $this->get( $offset );
