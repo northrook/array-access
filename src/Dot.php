@@ -8,7 +8,7 @@ use Northrook\ArrayAccessor\{ArrayConstructor, PublicSetArrayValue};
 
 /**
  * @template TKey of array-key
- * @template TValue of mixed
+ * @template TValue as mixed|array<TKey,TValue>
  *
  * @extends ArrayAccessor<TKey,TValue>
  */

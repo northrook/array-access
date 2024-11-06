@@ -105,19 +105,13 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
     /**
      * Push a given value to the end of the array in a given key.
      *
-     * @param int|string    $key
-     * @param mixed<TValue> $value
+     * @param int|string $key
+     * @param TValue     $value
      *
      * @return $this
      */
     public function push( int|string $key, mixed $value = null ) : self
     {
-        // if ( null === $value ) {
-        //     $this->array[] = $key;
-        //
-        //     return $this;
-        // }
-
         $items = $this->get( $key );
 
         if ( \is_array( $items ) || null === $items ) {
@@ -336,8 +330,8 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
     // ::: Array ::::::::::::
 
     /**
-     * @param array<TKey, TValue>|self<TKey, TValue>|string $array
-     * @param bool                                          $parse
+     * @param array<TKey, TValue>|ArrayAccessor<TKey, TValue>|string $array
+     * @param bool                                                   $parse
      *
      * @return $this
      */

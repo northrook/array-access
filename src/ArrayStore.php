@@ -5,9 +5,8 @@ declare(strict_types=1);
 namespace Northrook;
 
 use InvalidArgumentException;
-use Northrook\Exception\Trigger;
 use Northrook\Logger\Log;
-use Northrook\Resource\Path;
+use Northrook\Filesystem\Path;
 use Support\Time;
 use Symfony\Component\VarExporter\Exception\ExceptionInterface;
 use Symfony\Component\VarExporter\VarExporter;
@@ -15,7 +14,7 @@ use Throwable;
 
 /**
  * @template TKey of array-key
- * @template TValue of mixed
+ * @template TValue as mixed|array<TKey,TValue>
  *
  * @extends ArrayAccessor<TKey,TValue>
  */
@@ -99,7 +98,7 @@ class ArrayStore extends ArrayAccessor
      */
     final protected function loadDataStore() : self
     {
-        if ( ! $this->storagePath->exists || ! empty( $this->array ) ) {
+        if ( ! $this->storagePath->exists() || ! empty( $this->array ) ) {
             Log::info(
                 'No data to load, {reason}.',
                 ['reason' => ! empty( $this->array ) ? 'array already set' : 'storagePath not found'],
@@ -107,7 +106,7 @@ class ArrayStore extends ArrayAccessor
             return $this;
         }
 
-        $dataStore = include $this->storagePath->path;
+        $dataStore = include (string) $this->storagePath;
 
         if ( $dataStore['name'] !== $this->name ) {
             throw new InvalidArgumentException( $this::class." name mismatch. The object name of {$this->name} does not match the stored name {$dataStore['name']}." );
@@ -158,7 +157,7 @@ class ArrayStore extends ArrayAccessor
             $dataStore = VarExporter::export(
                 [
                     'name'      => $this->name,
-                    'path'      => $this->storagePath->path,
+                    'path'      => (string) $this->storagePath,
                     'generator' => $this::class,
                     'generated' => $generated->datetime,
                     'timestamp' => $generated->unixTimestamp,
@@ -193,11 +192,11 @@ class ArrayStore extends ArrayAccessor
 
     final protected function updateOPCache() : void
     {
-        $path = $this->storagePath->path;
+        $path = (string) $this->storagePath;
 
         try {
             if ( ! \ini_get( 'opcache.enable' ) ) {
-                Trigger::error( 'Unable to use OPCache for {className} -> {file}. OPcache is disabled.', [
+                Log::critical( 'Unable to use OPCache for {className} -> {file}. OPcache is disabled.', [
                     'className' => $this->name,
                     'file'      => $path,
                 ] );

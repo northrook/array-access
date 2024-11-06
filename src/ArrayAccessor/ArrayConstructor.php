@@ -8,7 +8,7 @@ use Northrook\ArrayAccessor;
 
 /**
  * @template TKey of array-key
- * @template TValue of mixed
+ * @template TValue as mixed|array<TKey,TValue>
  *
  * @extends ArrayAccessor<TKey,TValue>
  */
@@ -30,3 +30,6 @@ trait ArrayConstructor
         $this->arrayValue( $array, $parse );
     }
 }
+
+// array<TKey of (int|string), TValue>|Northrook\ArrayAccessor<TKey of (int|string)
+// array|Northrook\ArrayAccessor<(int|string), mixed>|string given
