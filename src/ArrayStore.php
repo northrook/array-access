@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Northrook;
 
 use InvalidArgumentException;
-use Northrook\Logger\Log;
-use Northrook\Filesystem\Path;
-use Support\Time;
+use Psr\Log\LoggerInterface;
+use Support\{FileInfo, Time};
 use Symfony\Component\VarExporter\Exception\ExceptionInterface;
 use Symfony\Component\VarExporter\VarExporter;
 use Throwable;
+use RuntimeException;
 
 /**
  * @template TKey of array-key
@@ -20,7 +20,7 @@ use Throwable;
  */
 class ArrayStore extends ArrayAccessor
 {
-    protected readonly Path $storagePath;
+    protected readonly FileInfo $storagePath;
 
     protected bool $locked = false;
 
@@ -31,18 +31,20 @@ class ArrayStore extends ArrayAccessor
     public readonly string $name;
 
     /**
-     * @param string      $storagePath Location to store the array data file
-     * @param null|string $name        [optional] If no name is provided, one will be generated from an extending class, or $storagePath basename
-     * @param bool        $readonly    [false] Prevents updating this instance of the ArrayStore
-     * @param bool        $autosave    [true]  Should changes be saved to disk on __destruct?
+     * @param string           $storagePath Location to store the array data file
+     * @param null|string      $name        [optional] If no name is provided, one will be generated from an extending class, or $storagePath basename
+     * @param bool             $readonly    [false] Prevents updating this instance of the ArrayStore
+     * @param bool             $autosave    [true]  Should changes be saved to disk on __destruct?
+     * @param ?LoggerInterface $logger      [optional] PSR-3 Logger
      */
     public function __construct(
-        string         $storagePath,
-        ?string        $name = null,
-        protected bool $readonly = false,
-        protected bool $autosave = true,
+        string                              $storagePath,
+        ?string                             $name = null,
+        protected bool                      $readonly = false,
+        protected bool                      $autosave = true,
+        protected readonly ?LoggerInterface $logger = null,
     ) {
-        $this->storagePath = new Path( $storagePath );
+        $this->storagePath = new FileInfo( $storagePath );
         $this->name        = $this->generateStoreName( $name );
         $this->loadDataStore();
     }
@@ -99,23 +101,29 @@ class ArrayStore extends ArrayAccessor
     final protected function loadDataStore() : self
     {
         if ( ! $this->storagePath->exists() || ! empty( $this->array ) ) {
-            Log::info(
+            $this->logger?->info(
                 'No data to load, {reason}.',
                 ['reason' => ! empty( $this->array ) ? 'array already set' : 'storagePath not found'],
             );
             return $this;
         }
 
-        $dataStore = include (string) $this->storagePath;
+        try {
+            $dataStore = include (string) $this->storagePath;
 
-        if ( $dataStore['name'] !== $this->name ) {
-            throw new InvalidArgumentException( $this::class." name mismatch. The object name of {$this->name} does not match the stored name {$dataStore['name']}." );
+            if ( $dataStore['name'] !== $this->name ) {
+                $message = $this::class.": Object name '{$this->name}' does not match '{$dataStore['name']}'.";
+                throw new InvalidArgumentException( $message );
+            }
+
+            $this->storedHash = $dataStore['hash'];
+            $this->array      = $dataStore['data'];
+
+            unset( $dataStore );
         }
-
-        $this->storedHash = $dataStore['hash'];
-        $this->array      = $dataStore['data'];
-
-        unset( $dataStore );
+        catch ( Throwable $error ) {
+            $this->logger?->emergency( $error->getMessage(), ['exception' => $error] );
+        }
 
         return $this;
     }
@@ -128,7 +136,10 @@ class ArrayStore extends ArrayAccessor
         $hash = \hash( algo : 'xxh3', data : \serialize( $this->array ) );
 
         if ( ( $this->storedHash ?? null ) === $hash ) {
-            Log::info( 'No need to save {name}.', ['name' => $this::class."::{$this->name}"] );
+            $this->logger?->info(
+                'No need to save {name}.',
+                ['name' => $this::class."::{$this->name}"],
+            );
             return false;
         }
 
@@ -149,7 +160,6 @@ class ArrayStore extends ArrayAccessor
      */
     private function createDataStore( array $data, string $hash ) : string
     {
-
         $generated = new Time();
         $generator = static::class;
 
@@ -157,7 +167,7 @@ class ArrayStore extends ArrayAccessor
             $dataStore = VarExporter::export(
                 [
                     'name'      => $this->name,
-                    'path'      => (string) $this->storagePath,
+                    'path'      => $this->storagePath->getPathname(),
                     'generator' => $this::class,
                     'generated' => $generated->datetime,
                     'timestamp' => $generated->unixTimestamp,
@@ -196,28 +206,34 @@ class ArrayStore extends ArrayAccessor
 
         try {
             if ( ! \ini_get( 'opcache.enable' ) ) {
-                Log::critical( 'Unable to use OPCache for {className} -> {file}. OPcache is disabled.', [
-                    'className' => $this->name,
-                    'file'      => $path,
-                ] );
+                $this->logger?->critical(
+                    'Unable to use OPCache for {className} -> {file}. OPcache is disabled.',
+                    [
+                        'className' => $this->name,
+                        'file'      => $path,
+                    ],
+                );
+
+                if ( ! $this->logger ) {
+                    throw new RuntimeException( "Unable to use OPCache for {$this->name} -> {$path}." );
+                }
                 return;
             }
             \opcache_invalidate( $path, true );
             \opcache_compile_file( $path );
         }
         catch ( Throwable $exception ) {
-            Log::error( $exception->getMessage(), ['file' => $path] );
+            $this->logger?->error( $exception->getMessage(), ['file' => $path] );
             return;
         }
 
-        Log::notice(
+        $this->logger?->notice(
             "{compiler} recompiled file '{file}' successfully.",
             [
                 'compiler' => 'OPCache',
                 'file'     => $path,
             ],
         );
-
     }
 
     /**
@@ -235,7 +251,7 @@ class ArrayStore extends ArrayAccessor
     {
         $name ??= $this::class;
         if ( $name === static::class ) {
-            return \strchr( (string) $this->storagePath->basename, '.', true ) ?: $name;
+            return \strchr( $this->storagePath->getBasename(), '.', true ) ?: $name;
         }
         return $name;
     }

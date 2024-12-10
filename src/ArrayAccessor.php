@@ -424,7 +424,8 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
     }
 
     /**
-     * @param  TKey                            $offset
+     * @param TKey $offset
+     *
      * @return null|array<TKey, TValue>|TValue
      */
     final public function offsetGet( mixed $offset ) : mixed
