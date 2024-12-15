@@ -16,7 +16,7 @@ use ValueError;
  * Inspired by adbario/php-dot-notation, and Laravel Collection.
  *
  * @template TKey of array-key
- * @template TValue as mixed|array<TKey,TValue>
+ * @template TValue of array<TKey,TValue>|TValue
  *
  * @implements \ArrayAccess<TKey, TValue>       for use with $class['key'] = 'value'
  * @implements \IteratorAggregate<TKey, TValue> for use in iterators like array_map
@@ -165,7 +165,7 @@ class ArrayAccessor implements IteratorAggregate, ArrayAccess
      * @param int|string $key
      * @param mixed      $default
      *
-     * @return null|array<TKey, TValue>|TValue
+     * @return null|TValue
      */
     public function get( int|string $key, mixed $default = null ) : mixed
     {
